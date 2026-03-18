@@ -1,4 +1,4 @@
-import FileSystem
+import CLTFileSystem
 import XCTest
 
 final class CommonlyUsedPathsProviderFactoryImplTests: XCTestCase {

@@ -1,7 +1,7 @@
 import Foundation
 import ProcessController
 import PathLib
-import FileSystem
+import CLTFileSystem
 import String
 
 public final class GitRepoRootProvider: RepoRootProvider {

@@ -1,5 +1,5 @@
 import PathLib
-import FileSystem
+import CLTFileSystem
 
 public final class ApplicationPathsProviderImpl: ApplicationPathsProvider {
     private let commonlyUsedPathsProvider: CommonlyUsedPathsProvider

@@ -1,6 +1,6 @@
 import DI
 import Foundation
-import FileSystem
+import CLTFileSystem
 
 public final class XcodeLocatorModuleDependencies: ModuleDependencies {
     public init() {

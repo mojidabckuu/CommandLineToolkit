@@ -14,8 +14,8 @@ let package = Package(
         .library(name: "DateProvider", targets: ["DateProvider"]),
         .library(name: "DateProviderTestHelpers", targets: ["DateProviderTestHelpers"]),
         .library(name: "Environment", targets: ["Environment"]),
-        .library(name: "FileSystem", targets: ["FileSystem"]),
-        .library(name: "FileSystemTestHelpers", targets: ["FileSystemTestHelpers"]),
+        .library(name: "CLTFileSystem", targets: ["CLTFileSystem"]),
+        .library(name: "CLTFileSystemTestHelpers", targets: ["CLTFileSystemTestHelpers"]),
         .library(name: "Graphite", targets: ["Graphite"]),
         .library(name: "GraphiteClient", targets: ["GraphiteClient"]),
         .library(name: "IO", targets: ["IO"]),
@@ -117,27 +117,27 @@ let package = Package(
             path: "Sources/Environment"
         ),
         .target(
-            name: "FileSystem",
+            name: "CLTFileSystem",
             dependencies: [
                 "DI",
                 .product(name: "Glob", package: "Glob"),
                 "PathLib",
                 "String",
             ],
-            path: "Sources/FileSystem"
+            path: "Sources/CLTFileSystem"
         ),
         .target(
-            name: "FileSystemTestHelpers",
+            name: "CLTFileSystemTestHelpers",
             dependencies: [
-                "FileSystem",
+                "CLTFileSystem",
                 "PathLib",
             ],
-            path: "Tests/FileSystemTestHelpers"
+            path: "Tests/CLTFileSystemTestHelpers"
         ),
         .testTarget(
             name: "FileSystemTests",
             dependencies: [
-                "FileSystem",
+                "CLTFileSystem",
                 "PathLib",
                 "TestHelpers",
                 "Tmp",
@@ -299,7 +299,7 @@ let package = Package(
                 "AtomicModels",
                 "DI",
                 "DateProvider",
-                "FileSystem",
+                "CLTFileSystem",
                 "ObjCExceptionCatcher",
                 "PathLib",
                 "SignalHandling",
@@ -320,7 +320,7 @@ let package = Package(
             name: "ProcessControllerTests",
             dependencies: [
                 "DateProvider",
-                "FileSystem",
+                "CLTFileSystem",
                 "PathLib",
                 "ProcessController",
                 "ProcessControllerTestHelpers",
@@ -335,7 +335,7 @@ let package = Package(
             dependencies: [
                 "DI",
                 "Environment",
-                "FileSystem",
+                "CLTFileSystem",
                 "PathLib",
                 "ProcessController",
                 "String",
@@ -345,8 +345,8 @@ let package = Package(
         .testTarget(
             name: "RepoRootTests",
             dependencies: [
-                "FileSystem",
-                "FileSystemTestHelpers",
+                "CLTFileSystem",
+                "CLTFileSystemTestHelpers",
                 "PathLib",
                 "RepoRoot",
                 "TestHelpers",
@@ -506,7 +506,7 @@ let package = Package(
             dependencies: [
                 "CLTExtensions",
                 "DI",
-                "FileSystem",
+                "CLTFileSystem",
                 "PathLib",
                 "PlistLib",
                 "XcodeLocatorModels",
@@ -523,8 +523,8 @@ let package = Package(
         .testTarget(
             name: "XcodeLocatorTests",
             dependencies: [
-                "FileSystem",
-                "FileSystemTestHelpers",
+                "CLTFileSystem",
+                "CLTFileSystemTestHelpers",
                 "PlistLib",
                 "TestHelpers",
                 "TmpTestHelpers",
