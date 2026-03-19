@@ -50,7 +50,7 @@ targets.append(
             "AtomicModels",
             "CLTLoggingModels",
             "DateProvider",
-            "FileSystem",
+            "CLTFileSystem",
             "Kibana",
             "KibanaModels",
             "PathLib",
@@ -173,7 +173,7 @@ targets.append(
 // MARK: FileSystem
 targets.append(
     .target(
-        name: "FileSystem",
+        name: "CLTFileSystem",
         dependencies: [
             "CLTExtensions",
             "DI",
@@ -181,33 +181,33 @@ targets.append(
             "PathLib",
             "Types",
         ],
-        path: "Sources/FileSystem"
+        path: "Sources/CLTFileSystem"
     )
 )
 // MARK: FileSystemTestHelpers
 targets.append(
     .target(
-        name: "FileSystemTestHelpers",
+        name: "CLTFileSystemTestHelpers",
         dependencies: [
-            "FileSystem",
+            "CLTFileSystem",
             "PathLib",
             "Types",
         ],
-        path: "Tests/FileSystemTestHelpers"
+        path: "Tests/CLTFileSystemTestHelpers"
     )
 )
 // MARK: FileSystemTests
 targets.append(
     .testTarget(
-        name: "FileSystemTests",
+        name: "CLTFileSystemTests",
         dependencies: [
-            "FileSystem",
+            "CLTFileSystem",
             "PathLib",
             "TestHelpers",
             "Tmp",
             "TmpTestHelpers",
         ],
-        path: "Tests/FileSystemTests"
+        path: "Tests/CLTFileSystemTests"
     )
 )
 // MARK: Graphite
@@ -394,7 +394,7 @@ targets.append(
         name: "PlistLib",
         dependencies: [
             "DI",
-            "FileSystem",
+            "CLTFileSystem",
             "PathLib",
         ],
         path: "Sources/PlistLib"
@@ -420,7 +420,7 @@ targets.append(
             "DI",
             "DateProvider",
             "Environment",
-            "FileSystem",
+            "CLTFileSystem",
             "PathLib",
             "SignalHandling",
             "Timer",
@@ -446,7 +446,7 @@ targets.append(
         name: "ProcessControllerTests",
         dependencies: [
             "DateProvider",
-            "FileSystem",
+            "CLTFileSystem",
             "PathLib",
             "ProcessController",
             "ProcessControllerTestHelpers",
@@ -465,7 +465,7 @@ targets.append(
             "CLTExtensions",
             "DI",
             "Environment",
-            "FileSystem",
+            "CLTFileSystem",
             "PathLib",
             "ProcessController",
         ],
@@ -477,8 +477,8 @@ targets.append(
     .testTarget(
         name: "RepoRootTests",
         dependencies: [
-            "FileSystem",
-            "FileSystemTestHelpers",
+            "CLTFileSystem",
+            "CLTFileSystemTestHelpers",
             "PathLib",
             "RepoRoot",
             "TestHelpers",
@@ -695,7 +695,7 @@ targets.append(
         dependencies: [
             "CLTExtensions",
             "DI",
-            "FileSystem",
+            "CLTFileSystem",
             "PathLib",
             "PlistLib",
             "XcodeLocatorModels",
@@ -718,8 +718,8 @@ targets.append(
     .testTarget(
         name: "XcodeLocatorTests",
         dependencies: [
-            "FileSystem",
-            "FileSystemTestHelpers",
+            "CLTFileSystem",
+            "CLTFileSystemTestHelpers",
             "PlistLib",
             "TestHelpers",
             "TmpTestHelpers",
@@ -749,8 +749,8 @@ let package = Package(
         .library(name: "DateProvider", targets: ["DateProvider"]),
         .library(name: "DateProviderTestHelpers", targets: ["DateProviderTestHelpers"]),
         .library(name: "Environment", targets: ["Environment"]),
-        .library(name: "FileSystem", targets: ["FileSystem"]),
-        .library(name: "FileSystemTestHelpers", targets: ["FileSystemTestHelpers"]),
+        .library(name: "CLTFileSystem", targets: ["CLTFileSystem"]),
+        .library(name: "CLTFileSystemTestHelpers", targets: ["CLTFileSystemTestHelpers"]),
         .library(name: "Graphite", targets: ["Graphite"]),
         .library(name: "GraphiteTestHelpers", targets: ["GraphiteTestHelpers"]),
         .library(name: "JSONStream", targets: ["JSONStream"]),

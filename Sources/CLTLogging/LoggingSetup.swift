@@ -4,7 +4,7 @@
 
 import DateProvider
 import Dispatch
-import FileSystem
+import CLTFileSystem
 import CLTLoggingModels
 import Foundation
 import Kibana

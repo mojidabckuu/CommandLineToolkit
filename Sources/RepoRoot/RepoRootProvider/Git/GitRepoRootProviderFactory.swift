@@ -1,6 +1,6 @@
 import ProcessController
 import PathLib
-import FileSystem
+import CLTFileSystem
 
 public final class GitRepoRootProviderFactory: RepoRootProviderFactory {
     private let processControllerProvider: ProcessControllerProvider

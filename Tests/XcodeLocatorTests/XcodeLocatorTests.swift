@@ -1,5 +1,5 @@
-import FileSystem
-import FileSystemTestHelpers
+import CLTFileSystem
+import CLTFileSystemTestHelpers
 import Foundation
 import PlistLib
 import TestHelpers

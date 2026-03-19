@@ -3,7 +3,7 @@
  */
 
 import Foundation
-import FileSystem
+import CLTFileSystem
 import PathLib
 
 public extension FileSystem {

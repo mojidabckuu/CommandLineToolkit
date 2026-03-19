@@ -1,5 +1,5 @@
 import Foundation
-import FileSystem
+import CLTFileSystem
 import PathLib
 
 open class FakeCommonlyUsedPathsProvider: CommonlyUsedPathsProvider {

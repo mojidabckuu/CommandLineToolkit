@@ -1,6 +1,6 @@
 import XCTest
 import Foundation
-import FileSystem
+import CLTFileSystem
 import TmpTestHelpers
 
 final class DirectoryCreatorImplTests: XCTestCase {
