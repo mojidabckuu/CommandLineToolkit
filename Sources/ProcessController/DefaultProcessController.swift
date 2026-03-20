@@ -1,6 +1,6 @@
+import CLTFileSystem
 import DateProvider
 import Dispatch
-import CLTFileSystem
 import Foundation
 import PathLib
 import Timer
@@ -11,7 +11,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
     public let subprocess: Subprocess
     public let processName: String
     public private(set) var processId: Int32 = 0
-    
+
     private let automaticManagementItemControllers: [AutomaticManagementItemController]
     let listenerQueue = DispatchQueue(label: "DefaultProcessController.listenerQueue")
     private let openPipeFileHandleGroup = DispatchGroup()
@@ -19,7 +19,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
     private let processTerminationHandlerGroup = DispatchGroup()
     private let processTerminationQueue = DispatchQueue(label: "DefaultProcessController.processTerminationQueue")
     private var automaticManagementTrackingTimer: DispatchBasedTimer?
-    
+
     private var didInitiateKillOfProcess = false
     private var didStartProcess = false
     private var signalListeners = [ListenerWrapper<SignalListener>]()
@@ -27,7 +27,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
     private var stderrListeners = [ListenerWrapper<StderrListener>]()
     private var stdoutListeners = [ListenerWrapper<StdoutListener>]()
     private var terminationListeners = [ListenerWrapper<TerminationListener>]()
-    
+
     private final class ListenerWrapper<T>: CustomStringConvertible {
         let uuid: UUID
         let purpose: String
@@ -38,10 +38,10 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             self.purpose = purpose
             self.listener = listener
         }
-        
+
         var description: String { "<\(type(of: self)) purpose: \(purpose) listener: \(listener)>" }
     }
-    
+
     public init(
         dateProvider: DateProvider,
         filePropertiesProvider: FilePropertiesProvider,
@@ -50,7 +50,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
         automaticManagementItemControllers = subprocess.automaticManagement.items.map { item in
             AutomaticManagementItemController(dateProvider: dateProvider, item: item)
         }
-        
+
         let arguments = try subprocess.arguments.map { try $0.stringValue() }
         processName = (arguments[0] as NSString).lastPathComponent
         process = try DefaultProcessController.createProcess(
@@ -59,12 +59,12 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             environment: subprocess.environment,
             workingDirectory: subprocess.workingDirectory
         )
-        
+
         self.subprocess = subprocess
-        
+
         try setUpProcessListening()
     }
-    
+
     private static func createProcess(
         filePropertiesProvider: FilePropertiesProvider,
         arguments: [String],
@@ -72,43 +72,47 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
         workingDirectory: AbsolutePath
     ) throws -> Process {
         let pathToExecutable = AbsolutePath(arguments[0])
-        
+
         let executableProperties = filePropertiesProvider.properties(path: pathToExecutable)
-        
+
         guard try executableProperties.isExecutable else {
             throw ProcessControllerError.fileIsNotExecutable(path: pathToExecutable)
         }
-        
+
+        var environemnt = ProcessInfo.processInfo.environment
+        environemnt.merge(environment.asStringDictionary, uniquingKeysWith: { $1 })
+
         let process = Process()
+
         process.executableURL = pathToExecutable.fileUrl
         process.arguments = Array(arguments.dropFirst())
-        process.environment = environment.asStringDictionary
+        process.environment = environemnt
         process.currentDirectoryURL = workingDirectory.fileUrl
         try process.setStartsNewProcessGroup(false)
         return process
     }
-    
+
     public var description: String {
         let executable = process.executableURL?.path ?? "unknown executable"
         let args = process.arguments?.joined(separator: " ") ?? ""
         return "<\(type(of: self)): \(executable) \(args) \(processStatus())>"
     }
-    
+
     // MARK: - Launch and Kill
-    
+
     public func start() throws {
         if didStartProcess {
             return
         }
-        
+
         didStartProcess = true
-        
+
         try process.run()
 
         processTerminationHandlerGroup.enter()
         process.terminationHandler = { [weak self] _ in
             guard let strongSelf = self else { return }
-            
+
             strongSelf.processTerminated()
         }
         processId = process.processIdentifier
@@ -116,7 +120,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
 
         listenerQueue.async { [weak self] in
             guard let strongSelf = self else { return }
-            
+
             for listenerWrapper in strongSelf.startListeners {
                 let unsubscriber: Unsubscribe = { [weak self] in
                     guard let strongSelf = self else { return }
@@ -128,7 +132,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             }
         }
     }
-    
+
     public func waitForProcessToDie() {
         processTerminationHandlerGroup.wait()
         if canInfinitelyWaitForOpenPipeFileHandleGroup {
@@ -137,7 +141,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             _ = openPipeFileHandleGroup.wait(timeout: .now() + 0.5)
         }
     }
-    
+
     public func processStatus() -> ProcessStatus {
         if !didStartProcess {
             return .notStarted
@@ -147,15 +151,15 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
         }
         return .terminated(exitCode: process.terminationStatus)
     }
-    
+
     public func send(signal: Int32) {
         listenerQueue.async { [weak self] in
             guard let strongSelf = self else { return }
-            
+
             for listenerWrapper in strongSelf.signalListeners {
                 let unsubscriber: Unsubscribe = { [weak self] in
                     guard let strongSelf = self else { return }
-                    
+
                     strongSelf.listenerQueue.async {
                         strongSelf.signalListeners.removeAll { $0.uuid == listenerWrapper.uuid }
                     }
@@ -165,7 +169,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             kill(-strongSelf.processId, signal)
         }
     }
-    
+
     public func signalAndForceKillIfNeeded(
         terminationSignal: Int32,
         terminationSignalTimeout: TimeInterval,
@@ -177,27 +181,27 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             onKill: onKill
         )
     }
-    
+
     public func onStart(listener: @escaping StartListener) {
         startListeners.append(ListenerWrapper(uuid: UUID(), purpose: "onStart", listener: listener))
     }
-    
+
     public func onStdout(listener: @escaping StdoutListener) {
         stdoutListeners.append(ListenerWrapper(uuid: UUID(), purpose: "onStdout", listener: listener))
     }
-    
+
     public func onStderr(listener: @escaping StderrListener) {
         stderrListeners.append(ListenerWrapper(uuid: UUID(), purpose: "onStderr", listener: listener))
     }
-    
+
     public func onSignal(listener: @escaping SignalListener) {
         signalListeners.append(ListenerWrapper(uuid: UUID(), purpose: "onSignal", listener: listener))
     }
-    
+
     public func onTermination(listener: @escaping TerminationListener) {
         terminationListeners.append(ListenerWrapper(uuid: UUID(), purpose: "onTermination", listener: listener))
     }
-    
+
     private func attemptToKillProcess(
         signalTermination: (Process) -> (),
         terminationSignalTimeout: TimeInterval,
@@ -213,7 +217,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             }
         }
     }
-    
+
     private func forceKillProcess(onKill: () -> ()) {
         if isProcessRunning {
             send(signal: SIGKILL)
@@ -221,15 +225,15 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             onKill()
         }
     }
-    
+
     private func processTerminated() {
         listenerQueue.async { [weak self] in
             guard let strongSelf = self else { return }
-            
+
             for listenerWrapper in strongSelf.terminationListeners {
                 let unsubscriber: Unsubscribe = { [weak self] in
                     guard let strongSelf = self else { return }
-                    
+
                     strongSelf.listenerQueue.async {
                         strongSelf.signalListeners.removeAll { $0.uuid == listenerWrapper.uuid }
                     }
@@ -237,26 +241,26 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
                 listenerWrapper.listener(strongSelf, unsubscriber)
             }
         }
-        
+
         listenerQueue.async(flags: .barrier) { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.processTerminationHandlerGroup.leave()
         }
     }
-    
+
     // MARK: - Hang Monitoring
-    
+
     private func startAutomaticManagement() {
         automaticManagementTrackingTimer = DispatchBasedTimer.startedTimer(repeating: .seconds(1), leeway: .seconds(1)) { [weak self] timer in
             guard let strongSelf = self else { return timer.stop() }
             strongSelf.automaticManagementItemControllers.forEach { $0.fireEventIfNecessary(processController: strongSelf) }
         }
     }
-    
+
     // MARK: - Processing Output
-    
+
     private var canInfinitelyWaitForOpenPipeFileHandleGroup: Bool {
-        // https://github.com/apple/swift-corelibs-foundation/issues/3275
+// https://github.com/apple/swift-corelibs-foundation/issues/3275
 #if os(macOS)
         return true
 #elseif os(Linux)
@@ -265,7 +269,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
         #error("Unsupported OS")
 #endif
     }
-    
+
     private func streamFromPipeIntoHandle(
         pipe: Pipe,
         onNewData: @escaping (Data) -> (),
@@ -284,7 +288,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             }
         }
     }
-    
+
     private func setUpProcessListening() throws {
         processStdForProcess(
             pipeAssigningClosure: { pipe in
@@ -302,7 +306,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
                 }
             }
         )
-        
+
         processStdForProcess(
             pipeAssigningClosure: { pipe in
                 process.standardError = pipe
@@ -320,7 +324,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             }
         )
     }
-    
+
     private func processStdForProcess(
         pipeAssigningClosure: (Pipe) -> (),
         onNewData: @escaping (Data) -> (),
@@ -338,15 +342,15 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             onEndOfData: onEndOfData
         )
     }
-    
+
     private func didReceiveStdout(data: Data) {
         listenerQueue.async { [weak self] in
             guard let strongSelf = self else { return }
-            
+
             for listenerWrapper in strongSelf.stdoutListeners {
                 let unsubscriber: Unsubscribe = { [weak self] in
                     guard let strongSelf = self else { return }
-                    
+
                     strongSelf.listenerQueue.async {
                         strongSelf.stdoutListeners.removeAll { $0.uuid == listenerWrapper.uuid }
                     }
@@ -355,15 +359,15 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             }
         }
     }
-    
+
     private func didReceiveStderr(data: Data) {
         listenerQueue.async { [weak self] in
             guard let strongSelf = self else { return }
-            
+
             for listenerWrapper in strongSelf.stderrListeners {
                 let unsubscriber: Unsubscribe = { [weak self] in
                     guard let strongSelf = self else { return }
-                    
+
                     strongSelf.listenerQueue.async {
                         strongSelf.stderrListeners.removeAll { $0.uuid == listenerWrapper.uuid }
                     }
@@ -372,7 +376,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
             }
         }
     }
-    
+
     private func didProcessDataFromProcess() {
         for controller in automaticManagementItemControllers {
             controller.processReportedActivity()
