@@ -5,7 +5,8 @@ public final class JSONReader {
     private let inputStream: JSONStream
     private let eventStream: JSONReaderEventStream
     private var context = [ParsingContext.root]
-    
+    private let log: (String) -> Void
+
     private let anyCharacterSet = CharacterSet([]).inverted
     private let numberChars = CharacterSet(charactersIn: "-1234567890")
     private let whiteCharacters = CharacterSet.whitespacesAndNewlines
@@ -24,9 +25,10 @@ public final class JSONReader {
         static let hypenMinus: UInt8 = 0x2d // -
     }
     
-    public init(inputStream: JSONStream, eventStream: JSONReaderEventStream) {
+    public init(inputStream: JSONStream, eventStream: JSONReaderEventStream, log: @escaping (String) -> Void) {
         self.inputStream = inputStream
         self.eventStream = eventStream
+        self.log = log
     }
     
     /// Starts a continous and blocking parse operation.
@@ -40,8 +42,10 @@ public final class JSONReader {
     private func readAndThrowErrorOnFailure() throws {
         do {
             try readRecursively()
+            log("ended reading json")
         } catch {
             if let readerError = error as? JSONReaderError, case JSONReaderError.streamEndedAtRootContext = readerError {
+                log("exit with streamEndedAtRootContext")
                 return
             } else {
                 throw error

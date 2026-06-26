@@ -25,10 +25,11 @@ public final class JSONStreamFactory {
     /// - Returns: `JSONStreamParts` object, with `appendableStream` object (you feed it with your incoming bytes),
     /// and `jsonReader` object (actual parser) configured to work together.
     public static func create(
-        eventStream: JSONReaderEventStream
+        eventStream: JSONReaderEventStream,
+        log: @escaping (String) -> Void = { _ in }
     ) -> JSONStreamParts {
         let jsonStream: AppendableJSONStream = BlockingArrayBasedJSONStream()
-        let jsonReader = JSONReader(inputStream: jsonStream, eventStream: eventStream)
+        let jsonReader = JSONReader(inputStream: jsonStream, eventStream: eventStream, log: log)
         return JSONStreamParts(appendableStream: jsonStream, jsonReader: jsonReader)
     }
 }
