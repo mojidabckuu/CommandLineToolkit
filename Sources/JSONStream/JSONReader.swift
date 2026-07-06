@@ -2,7 +2,8 @@ import Foundation
 
 /// JSON reader that utilizes JSONStream to parse the JSON stream on the fly.
 public final class JSONReader {
-    private let inputStream: JSONStream
+    private var inputStream: JSONStream
+    private let inputAsyncStream: AsyncStream<[UInt8]>
     private let eventStream: JSONReaderEventStream
     private var context = [ParsingContext.root]
     private let log: (String) -> Void
@@ -25,12 +26,22 @@ public final class JSONReader {
         static let hypenMinus: UInt8 = 0x2d // -
     }
     
-    public init(inputStream: JSONStream, eventStream: JSONReaderEventStream, log: @escaping (String) -> Void) {
+    public init(inputStream: JSONStream, eventStream: JSONReaderEventStream, log: @escaping (String) -> Void = { _ in }) {
         self.inputStream = inputStream
+        self.inputAsyncStream = AsyncStream<[UInt8]>(unfolding: {
+            []
+        })
         self.eventStream = eventStream
         self.log = log
     }
-    
+
+    public init(inputStreamAsync: AsyncStream<[UInt8]>, eventStream: JSONReaderEventStream, log: @escaping (String) -> Void = { _ in }) {
+        self.inputStream = BlockingArrayBasedJSONStream()
+        self.inputAsyncStream = inputStreamAsync
+        self.eventStream = eventStream
+        self.log = log
+    }
+
     /// Starts a continous and blocking parse operation.
     /// It runs it until error occurs, or stream is closed and all non-root objects are parsed successfully.
     /// - Throws: `JSONReaderError` if reader detects an error in the incoming byte stream.
@@ -38,7 +49,22 @@ public final class JSONReader {
     public func start() throws {
         try readAndThrowErrorOnFailure()
     }
-    
+
+    public func start() async throws {
+        for await line in inputAsyncStream {
+            inputStream = ArrayBasedJSONStream(storage: line)
+            do {
+                try readRecursively()
+            } catch {
+                if let readerError = error as? JSONReaderError, case JSONReaderError.streamEndedAtRootContext = readerError {
+                    continue
+                } else {
+                    throw error
+                }
+            }
+        }
+    }
+
     private func readAndThrowErrorOnFailure() throws {
         do {
             try readRecursively()
