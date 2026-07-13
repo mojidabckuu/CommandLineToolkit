@@ -13,6 +13,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
     public private(set) var processId: Int32 = 0
 
     private let automaticManagementItemControllers: [AutomaticManagementItemController]
+    public private(set) var stdOutData: [Data] = []
     let listenerQueue = DispatchQueue(label: "DefaultProcessController.listenerQueue")
     private let openPipeFileHandleGroup = DispatchGroup()
     private let process: Process
@@ -344,6 +345,7 @@ public final class DefaultProcessController: ProcessController, CustomStringConv
     }
 
     private func didReceiveStdout(data: Data) {
+        stdOutData.append(data)
         listenerQueue.async { [weak self] in
             guard let strongSelf = self else { return }
 
